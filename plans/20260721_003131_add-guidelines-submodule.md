@@ -1,6 +1,6 @@
 # Add Flutter Guidelines as a Git submodule
 
-**Status:** in_progress
+**Status:** completed
 
 ## What the issue is
 
