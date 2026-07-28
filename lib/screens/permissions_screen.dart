@@ -33,7 +33,7 @@ class PermissionsScreen extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Location Access',
+                            l10n.locationAccessTitle,
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
@@ -42,20 +42,20 @@ class PermissionsScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Used strictly on-device to determine local sunrise and compute accurate Sanātana Dharma time units (Vedic hours, Muhurtas, Hora, and Panchang).',
+                      l10n.locationAccessBody,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 12),
                     Row(
                       children: [
                         Text(
-                          'Status: ',
+                          l10n.statusLabel,
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         Expanded(
                           child: Text(
-                            _locationStatusText(location),
+                            _locationStatusText(location, l10n),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ),
@@ -67,12 +67,12 @@ class PermissionsScreen extends ConsumerWidget {
                         OutlinedButton.icon(
                           onPressed: () => notifier.openAppSettings(),
                           icon: const Icon(Icons.settings_outlined, size: 18),
-                          label: const Text('App Settings'),
+                          label: Text(l10n.appSettings),
                         ),
                         const SizedBox(width: 8),
                         TextButton(
                           onPressed: () => notifier.requestLocationPermission(),
-                          child: const Text('Check / Request'),
+                          child: Text(l10n.checkOrRequest),
                         ),
                       ],
                     ),
@@ -93,7 +93,7 @@ class PermissionsScreen extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Internet Access: Disabled',
+                            l10n.internetDisabledTitle,
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
@@ -102,7 +102,7 @@ class PermissionsScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'This app deliberately omits the INTERNET permission. It runs 100% offline — no personal data or location coordinates are ever sent to network servers.',
+                      l10n.internetDisabledBody,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
@@ -115,21 +115,21 @@ class PermissionsScreen extends ConsumerWidget {
     );
   }
 
-  String _locationStatusText(LocationState state) {
+  String _locationStatusText(LocationState state, AppLocalizations l10n) {
     if (state.liveResult == null) {
-      return state.useLive ? 'Live mode active' : 'Using saved location';
+      return state.useLive ? l10n.liveModeActive : l10n.usingSavedLocation;
     }
     switch (state.liveResult!.status) {
       case LocationStatus.success:
-        return 'Granted & active';
+        return l10n.grantedAndActive;
       case LocationStatus.serviceDisabled:
-        return 'GPS service disabled on device';
+        return l10n.gpsDisabled;
       case LocationStatus.permissionDenied:
-        return 'Permission denied';
+        return l10n.permissionDenied;
       case LocationStatus.permissionDeniedForever:
-        return 'Permission blocked (allow in settings)';
+        return l10n.permissionBlocked;
       case LocationStatus.error:
-        return 'Error fetching location';
+        return l10n.errorFetchingLocation;
     }
   }
 }

@@ -66,6 +66,11 @@ class DharmaDialPainter extends CustomPainter {
   /// looks it up (e.g. `MuhurtaNames.at`) so the painter stays a dumb renderer.
   final String muhurtaName;
 
+  /// The count line under the name, e.g. `Muhūrta 8 / 30`. The caller builds
+  /// it in the user's language, so the painter stays a dumb renderer and knows
+  /// no UI wording of its own.
+  final String countLabel;
+
   /// Bright vermillion — hands, ring, and the "now" marker.
   final Color accent;
 
@@ -86,6 +91,7 @@ class DharmaDialPainter extends CustomPainter {
   const DharmaDialPainter({
     required this.dharma,
     required this.muhurtaName,
+    required this.countLabel,
     required this.accent,
     required this.foreground,
     required this.muted,
@@ -293,7 +299,7 @@ class DharmaDialPainter extends CustomPainter {
     }
 
     final count = _layoutText(
-      'Muhūrta ${dharma.muhurta + 1} / ${AppConstants.muhurtaPerDay}',
+      countLabel,
       radius * 0.065,
       countColor,
       FontWeight.w500,
@@ -506,6 +512,7 @@ class DharmaDialPainter extends CustomPainter {
     // Repaint only when the reading or the colours change — once per second.
     return oldDelegate.dharma != dharma ||
         oldDelegate.muhurtaName != muhurtaName ||
+        oldDelegate.countLabel != countLabel ||
         oldDelegate.accent != accent ||
         oldDelegate.foreground != foreground ||
         oldDelegate.muted != muted ||

@@ -24,26 +24,22 @@ class HelpScreen extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
-              child: Text(
-                'The clock reads Ghaṭikā : Vināḍī : Prāṇa, like '
-                'Hour : Minute : Second. The day starts at local sunrise. '
-                'Tap a unit below to learn more.',
-                style: theme.textTheme.bodyMedium,
-              ),
+              child: Text(l10n.helpIntro, style: theme.textTheme.bodyMedium),
             ),
             for (var i = 0; i < units.length; i++)
               NavCard(
                 icon: Icons.schedule,
                 iconColor: theme.colorScheme.primary,
-                title: units[i].name,
-                subtitle: '${units[i].approx}, ${units[i].count}',
+                title: units[i].nameFor(l10n.isMl),
+                subtitle:
+                    '${units[i].approxFor(l10n.isMl)}, '
+                    '${units[i].countFor(l10n.isMl)}',
                 onTap: () => context.push('/settings/help/$i'),
               ),
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
               child: Text(
-                'These lengths are approximate — the day flexes a little with '
-                'the season, so each unit stretches or shrinks to fit it.',
+                l10n.helpApproxNote,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: AppTheme.muted,
                 ),

@@ -44,8 +44,7 @@ class AlmanacScreen extends ConsumerWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Text(
-                      'The almanac needs a location. Set one in Settings '
-                      '(or wait for a live fix) to see the year.',
+                      l10n.almanacEmpty,
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),
@@ -75,13 +74,14 @@ class _YearSelector extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final notifier = ref.read(selectedAlmanacYearProvider.notifier);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton(
-          tooltip: 'Previous year',
+          tooltip: l10n.previousYear,
           icon: const Icon(Icons.chevron_left),
           onPressed: notifier.previous,
         ),
@@ -92,7 +92,7 @@ class _YearSelector extends ConsumerWidget {
           ),
         ),
         IconButton(
-          tooltip: 'Next year',
+          tooltip: l10n.nextYear,
           icon: const Icon(Icons.chevron_right),
           onPressed: notifier.next,
         ),
@@ -110,6 +110,7 @@ class _EventsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Card(
       shape: RoundedRectangleBorder(
@@ -122,7 +123,7 @@ class _EventsCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Sun events of the year',
+              l10n.sunEventsTitle,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: AppTheme.muted,
                 fontWeight: FontWeight.w600,
@@ -145,6 +146,7 @@ class _EventRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final local = event.instantUtc.toLocal();
 
     return Padding(
@@ -153,17 +155,17 @@ class _EventRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _eventName(event.kind),
+            _eventName(event.kind, l10n),
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           Text(
-            '${_dayDate(local)} · ${_hm(local)}',
+            '${_dayDate(local, l10n)} · ${_hm(local)}',
             style: theme.textTheme.bodyMedium,
           ),
           Text(
-            _eventNote(event.kind),
+            _eventNote(event.kind, l10n),
             style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.muted),
           ),
         ],
@@ -183,6 +185,7 @@ class _MonthSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     final days = [
       for (final day in almanac.days)
@@ -195,7 +198,7 @@ class _MonthSection extends StatelessWidget {
       child: ExpansionTile(
         initiallyExpanded: almanac.year == now.year && month == now.month,
         title: Text(
-          _monthNames[month - 1],
+          l10n.monthName(month),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -227,15 +230,16 @@ class _DayHeaderRow extends StatelessWidget {
       color: AppTheme.muted,
       fontWeight: FontWeight.w600,
     );
+    final l10n = AppLocalizations.of(context);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          SizedBox(width: 32, child: Text('Day', style: style)),
-          Expanded(child: Text('Sunrise', style: style)),
-          Expanded(child: Text('Sunset', style: style)),
-          Expanded(child: Text('Length', style: style)),
+          SizedBox(width: 32, child: Text(l10n.dayColumn, style: style)),
+          Expanded(child: Text(l10n.sunriseLabel, style: style)),
+          Expanded(child: Text(l10n.sunsetLabel, style: style)),
+          Expanded(child: Text(l10n.lengthColumn, style: style)),
         ],
       ),
     );
@@ -256,6 +260,7 @@ class _DayRow extends StatelessWidget {
     final style = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: isToday ? FontWeight.w700 : FontWeight.w400,
     );
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       decoration: isToday
@@ -270,7 +275,7 @@ class _DayRow extends StatelessWidget {
           SizedBox(width: 32, child: Text('${day.date.day}', style: style)),
           Expanded(child: Text(_time(day.sunriseUtc), style: style)),
           Expanded(child: Text(_time(day.sunsetUtc), style: style)),
-          Expanded(child: Text(_length(day.dayLength), style: style)),
+          Expanded(child: Text(_length(day.dayLength, l10n), style: style)),
         ],
       ),
     );
@@ -279,83 +284,47 @@ class _DayRow extends StatelessWidget {
 
 // --- event wording ---
 
-/// The display name of a yearly sun event.
-String _eventName(AlmanacEventKind kind) => switch (kind) {
-  AlmanacEventKind.marchEquinox => 'March equinox',
-  AlmanacEventKind.juneSolstice => 'June solstice',
-  AlmanacEventKind.septemberEquinox => 'September equinox',
-  AlmanacEventKind.decemberSolstice => 'December solstice',
-  AlmanacEventKind.uttarayanaStart => 'Uttarāyaṇa begins (Makara Saṅkrānti)',
-  AlmanacEventKind.dakshinayanaStart => 'Dakṣiṇāyana begins (Karka Saṅkrānti)',
-};
+/// The display name of a yearly sun event, in the user's language.
+String _eventName(AlmanacEventKind kind, AppLocalizations l10n) =>
+    switch (kind) {
+      AlmanacEventKind.marchEquinox => l10n.marchEquinox,
+      AlmanacEventKind.juneSolstice => l10n.juneSolstice,
+      AlmanacEventKind.septemberEquinox => l10n.septemberEquinox,
+      AlmanacEventKind.decemberSolstice => l10n.decemberSolstice,
+      AlmanacEventKind.uttarayanaStart => l10n.uttarayanaStart,
+      AlmanacEventKind.dakshinayanaStart => l10n.dakshinayanaStart,
+    };
 
-/// A one-line plain-word note for each event.
-String _eventNote(AlmanacEventKind kind) => switch (kind) {
-  AlmanacEventKind.marchEquinox =>
-    'Day and night are nearly equal. The Sun crosses the equator '
-        'heading north.',
-  AlmanacEventKind.juneSolstice =>
-    'The longest day of the year in the northern half of the world.',
-  AlmanacEventKind.septemberEquinox =>
-    'Day and night are nearly equal. The Sun crosses the equator '
-        'heading south.',
-  AlmanacEventKind.decemberSolstice =>
-    'The shortest day of the year in the northern half of the world.',
-  AlmanacEventKind.uttarayanaStart =>
-    'The Sun enters sidereal Makara — the northward half-year begins.',
-  AlmanacEventKind.dakshinayanaStart =>
-    'The Sun enters sidereal Karka — the southward half-year begins.',
-};
+/// A one-line plain-word note for each event, in the user's language.
+String _eventNote(AlmanacEventKind kind, AppLocalizations l10n) =>
+    switch (kind) {
+      AlmanacEventKind.marchEquinox => l10n.marchEquinoxNote,
+      AlmanacEventKind.juneSolstice => l10n.juneSolsticeNote,
+      AlmanacEventKind.septemberEquinox => l10n.septemberEquinoxNote,
+      AlmanacEventKind.decemberSolstice => l10n.decemberSolsticeNote,
+      AlmanacEventKind.uttarayanaStart => l10n.uttarayanaStartNote,
+      AlmanacEventKind.dakshinayanaStart => l10n.dakshinayanaStartNote,
+    };
 
 // --- small local formatting helpers (no `intl` dependency) ---
-
-const List<String> _monthNames = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
 
 String _two(int n) => n.toString().padLeft(2, '0');
 
 /// `HH:mm` of an already-local instant.
 String _hm(DateTime local) => '${_two(local.hour)}:${_two(local.minute)}';
 
-/// e.g. `Sat, 20 Mar 2027` for a **local** instant.
-String _dayDate(DateTime local) {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${days[local.weekday - 1]}, ${local.day} '
-      '${months[local.month - 1]} ${local.year}';
+/// e.g. `Sat, 20 Mar 2027` for a **local** instant, worded by [l10n].
+String _dayDate(DateTime local, AppLocalizations l10n) {
+  return '${l10n.shortWeekdayName(local.weekday)}, ${local.day} '
+      '${l10n.shortMonthName(local.month)} ${local.year}';
 }
 
 /// A table time: local `HH:mm`, or a dash on a polar gap.
 String _time(DateTime? utc) => utc == null ? '—' : _hm(utc.toLocal());
 
 /// A day length like `12h 33m`, or a dash when there is none.
-String _length(Duration? length) {
+String _length(Duration? length, AppLocalizations l10n) {
   if (length == null) return '—';
   final minutes = length.inMinutes;
-  return '${minutes ~/ 60}h ${_two(minutes % 60)}m';
+  return l10n.dayLength(minutes ~/ 60, _two(minutes % 60));
 }

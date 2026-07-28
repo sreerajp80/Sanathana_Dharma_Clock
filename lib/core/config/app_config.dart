@@ -9,13 +9,31 @@ class AppConfig {
   final String build;
   final Map<String, String> details;
 
+  /// Malayalam description. Empty when the config file does not carry one.
+  final String descriptionMl;
+
+  /// Malayalam detail rows (Malayalam label → value). Empty when absent.
+  final Map<String, String> detailsMl;
+
   const AppConfig({
     required this.appName,
     required this.description,
     required this.version,
     required this.build,
     this.details = const {},
+    this.descriptionMl = '',
+    this.detailsMl = const {},
   });
+
+  /// The description in the active language, falling back to English when the
+  /// config file has no Malayalam text.
+  String descriptionFor(bool isMalayalam) =>
+      isMalayalam && descriptionMl.isNotEmpty ? descriptionMl : description;
+
+  /// The detail rows in the active language, falling back to English when the
+  /// config file has no Malayalam block.
+  Map<String, String> detailsFor(bool isMalayalam) =>
+      isMalayalam && detailsMl.isNotEmpty ? detailsMl : details;
 
   /// Safe built-in value used when the config file is missing or malformed,
   /// so the app never crashes on a bad config.
@@ -51,6 +69,8 @@ class AppConfig {
       version: str('version', fallback.version),
       build: str('build', fallback.build),
       details: parseStringMap('details'),
+      descriptionMl: str('descriptionMl', ''),
+      detailsMl: parseStringMap('detailsMl'),
     );
   }
 }

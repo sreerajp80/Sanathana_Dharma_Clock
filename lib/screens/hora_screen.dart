@@ -7,6 +7,7 @@ import '../models/hora_window.dart';
 import '../providers/clock_providers.dart';
 import '../providers/hora_providers.dart';
 import '../theme/app_theme.dart';
+import '../widgets/window_labels.dart';
 
 /// The Hora tab: today's 24 planetary hours in civil time.
 class HoraScreen extends ConsumerStatefulWidget {
@@ -81,8 +82,7 @@ class _HoraScreenState extends ConsumerState<HoraScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Text(
-                      'Horās need a sunrise and sunset. Set a location in '
-                      'Settings (or wait for a live fix) to see them.',
+                      l10n.horaEmpty,
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),
@@ -94,10 +94,10 @@ class _HoraScreenState extends ConsumerState<HoraScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (current != null)
-                      _CurrentHoraCard(hora: current, now: now),
+                      _CurrentHoraCard(hora: current, now: now, l10n: l10n),
                     _SectionHeader(
-                      title: 'Day horās',
-                      subtitle: 'Sunrise → sunset split into 12',
+                      title: l10n.dayHorasTitle,
+                      subtitle: l10n.dayHorasSubtitle,
                     ),
                     for (final h in dayHoras)
                       _HoraRow(
@@ -105,11 +105,12 @@ class _HoraScreenState extends ConsumerState<HoraScreen> {
                         index: dayHoras.indexOf(h),
                         hora: h,
                         isCurrent: identical(h, current),
+                        l10n: l10n,
                       ),
                     const SizedBox(height: 16),
                     _SectionHeader(
-                      title: 'Night horās',
-                      subtitle: 'Sunset → next sunrise split into 12',
+                      title: l10n.nightHorasTitle,
+                      subtitle: l10n.nightHorasSubtitle,
                     ),
                     for (final h in nightHoras)
                       _HoraRow(
@@ -117,6 +118,7 @@ class _HoraScreenState extends ConsumerState<HoraScreen> {
                         index: nightHoras.indexOf(h),
                         hora: h,
                         isCurrent: identical(h, current),
+                        l10n: l10n,
                       ),
                   ],
                 ),
@@ -128,19 +130,22 @@ class _HoraScreenState extends ConsumerState<HoraScreen> {
 
 /// The big card on top: the horā running right now.
 class _CurrentHoraCard extends StatelessWidget {
-  const _CurrentHoraCard({required this.hora, required this.now});
+  const _CurrentHoraCard({
+    required this.hora,
+    required this.now,
+    required this.l10n,
+  });
 
   final HoraWindow hora;
   final DateTime now;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final remaining = hora.end.difference(now.toUtc());
     final mins = remaining.inMinutes;
-    final left = mins >= 60
-        ? '${mins ~/ 60} h ${mins % 60} min left'
-        : '$mins min left';
+    final left = l10n.timeLeft(mins ~/ 60, mins % 60);
 
     return Card(
       shape: RoundedRectangleBorder(
@@ -153,19 +158,19 @@ class _CurrentHoraCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Current horā',
+              l10n.currentHora,
               style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.muted),
             ),
             const SizedBox(height: 4),
             Text(
-              hora.lord,
+              horaLordName(hora, l10n),
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              '${hora.isDay ? 'Day' : 'Night'} horā · '
+              '${hora.isDay ? l10n.dayHora : l10n.nightHora} · '
               '${_hm(hora.start)} – ${_hm(hora.end)} · $left',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppTheme.muted,
@@ -218,11 +223,13 @@ class _HoraRow extends StatelessWidget {
     required this.index,
     required this.hora,
     required this.isCurrent,
+    required this.l10n,
   });
 
   final int index;
   final HoraWindow hora;
   final bool isCurrent;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -252,7 +259,7 @@ class _HoraRow extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              hora.lord,
+              horaLordName(hora, l10n),
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
@@ -260,7 +267,7 @@ class _HoraRow extends StatelessWidget {
             ),
           ),
           if (isCurrent) ...[
-            const _NowChip(color: AppTheme.vermillion),
+            _NowChip(color: AppTheme.vermillion, label: l10n.now),
             const SizedBox(width: 8),
           ],
           Text(
@@ -278,9 +285,10 @@ class _HoraRow extends StatelessWidget {
 
 /// The small "Now" pill shown on the active row.
 class _NowChip extends StatelessWidget {
-  const _NowChip({required this.color});
+  const _NowChip({required this.color, required this.label});
 
   final Color color;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
@@ -291,7 +299,7 @@ class _NowChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
-        'Now',
+        label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: AppTheme.chandan,
           fontWeight: FontWeight.w700,

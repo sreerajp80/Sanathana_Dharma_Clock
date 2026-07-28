@@ -8,6 +8,7 @@ import '../providers/clock_providers.dart';
 import '../providers/muhurta_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/window_colors.dart';
+import '../widgets/window_labels.dart';
 
 /// The Muhurta & Kalas tab: today's named windows in civil time.
 ///
@@ -86,28 +87,29 @@ class _MuhurtaScreenState extends ConsumerState<MuhurtaScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _SectionHeader(
-                title: 'Kālas & special windows',
-                subtitle: 'Split from today\'s daytime (sunrise → sunset)',
+                title: l10n.kalasTitle,
+                subtitle: l10n.kalasSubtitle,
               ),
               if (day.kalas.isEmpty)
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Text(
-                      'These windows need a sunrise and sunset. Set a location '
-                      'in Settings (or wait for a live fix) to see them.',
+                      l10n.kalasEmpty,
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),
                 )
               else
-                ...day.kalas.map((w) => _WindowCard(window: w, now: now)),
+                ...day.kalas.map(
+                  (w) => _WindowCard(window: w, now: now, l10n: l10n),
+                ),
               const SizedBox(height: 16),
               _SectionHeader(
-                title: 'The 30 Muhūrtas',
+                title: l10n.muhurtaListTitle,
                 subtitle: day.isApproximate
-                    ? 'Approximate — no sunrise anchor (midnight day)'
-                    : 'The sunrise-to-sunrise day split into 30',
+                    ? l10n.muhurtaListSubtitleApprox
+                    : l10n.muhurtaListSubtitle,
               ),
               for (var i = 0; i < day.muhurtas.length; i++)
                 _MuhurtaRow(
@@ -115,6 +117,7 @@ class _MuhurtaScreenState extends ConsumerState<MuhurtaScreen> {
                   index: i,
                   window: day.muhurtas[i],
                   isCurrent: day.muhurtas[i].contains(now),
+                  l10n: l10n,
                 ),
             ],
           ),
@@ -159,10 +162,15 @@ class _SectionHeader extends StatelessWidget {
 /// One special window (Abhijit or a kāla) as a card: colour dot, name,
 /// auspicious/inauspicious tag, start–end, and a "Now" chip when active.
 class _WindowCard extends StatelessWidget {
-  const _WindowCard({required this.window, required this.now});
+  const _WindowCard({
+    required this.window,
+    required this.now,
+    required this.l10n,
+  });
 
   final MuhurtaWindow window;
   final DateTime now;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +200,7 @@ class _WindowCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    window.name,
+                    windowName(window, l10n),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -200,8 +208,8 @@ class _WindowCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     window.kind == WindowKind.auspicious
-                        ? 'Auspicious'
-                        : 'Inauspicious',
+                        ? l10n.auspicious
+                        : l10n.inauspicious,
                     style: theme.textTheme.bodySmall?.copyWith(color: color),
                   ),
                 ],
@@ -218,7 +226,7 @@ class _WindowCard extends StatelessWidget {
                 ),
                 if (active) ...[
                   const SizedBox(height: 2),
-                  _NowChip(color: color),
+                  _NowChip(color: color, label: l10n.now),
                 ],
               ],
             ),
@@ -237,11 +245,13 @@ class _MuhurtaRow extends StatelessWidget {
     required this.index,
     required this.window,
     required this.isCurrent,
+    required this.l10n,
   });
 
   final int index;
   final MuhurtaWindow window;
   final bool isCurrent;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -275,7 +285,7 @@ class _MuhurtaRow extends StatelessWidget {
               children: [
                 Flexible(
                   child: Text(
-                    window.name,
+                    windowName(window, l10n),
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
@@ -294,7 +304,7 @@ class _MuhurtaRow extends StatelessWidget {
             ),
           ),
           if (isCurrent) ...[
-            const _NowChip(color: AppTheme.vermillion),
+            _NowChip(color: AppTheme.vermillion, label: l10n.now),
             const SizedBox(width: 8),
           ],
           Text(
@@ -312,9 +322,10 @@ class _MuhurtaRow extends StatelessWidget {
 
 /// The small "Now" pill shown on the active window.
 class _NowChip extends StatelessWidget {
-  const _NowChip({required this.color});
+  const _NowChip({required this.color, required this.label});
 
   final Color color;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
@@ -325,7 +336,7 @@ class _NowChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
-        'Now',
+        label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: AppTheme.chandan,
           fontWeight: FontWeight.w700,

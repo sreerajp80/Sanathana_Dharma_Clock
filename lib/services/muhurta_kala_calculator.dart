@@ -79,6 +79,8 @@ class MuhurtaKalaCalculator {
       final to = (spanMicros * (i + 1) / AppConstants.muhurtaPerDay).round();
       return MuhurtaWindow(
         name: MuhurtaNames.at(i),
+        label: WindowLabel.muhurta,
+        index: i,
         kind: i == brahmaMuhurtaIndex
             ? WindowKind.auspicious
             : WindowKind.neutral,
@@ -107,6 +109,7 @@ class MuhurtaKalaCalculator {
     // One window covering the given 1-based part of an equal N-way split.
     MuhurtaWindow part({
       required String name,
+      required WindowLabel label,
       required WindowKind kind,
       required int index,
       required int of,
@@ -115,6 +118,7 @@ class MuhurtaKalaCalculator {
       final to = (daytimeMicros * index / of).round();
       return MuhurtaWindow(
         name: name,
+        label: label,
         kind: kind,
         start: dayStart.add(Duration(microseconds: from)),
         end: dayStart.add(Duration(microseconds: to)),
@@ -125,24 +129,28 @@ class MuhurtaKalaCalculator {
       // Abhijit: the 8th of the 15 day-muhūrtas, around local solar noon.
       part(
         name: 'Abhijit Muhūrta',
+        label: WindowLabel.abhijit,
         kind: WindowKind.auspicious,
         index: 8,
         of: 15,
       ),
       part(
         name: 'Rāhu Kālam',
+        label: WindowLabel.rahuKala,
         kind: WindowKind.inauspicious,
         index: _rahuPart[weekday] ?? 8,
         of: 8,
       ),
       part(
         name: 'Yamagaṇḍa',
+        label: WindowLabel.yamagandaKala,
         kind: WindowKind.inauspicious,
         index: _yamagandaPart[weekday] ?? 5,
         of: 8,
       ),
       part(
         name: 'Gulika Kālam',
+        label: WindowLabel.gulikaKala,
         kind: WindowKind.inauspicious,
         index: _gulikaPart[weekday] ?? 7,
         of: 8,

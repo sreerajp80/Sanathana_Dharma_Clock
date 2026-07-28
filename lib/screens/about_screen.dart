@@ -14,6 +14,7 @@ class AboutScreen extends ConsumerWidget {
     final config = ref.watch(appConfigProvider);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final details = config.detailsFor(l10n.isMl);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.aboutTitle)),
@@ -31,21 +32,21 @@ class AboutScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              config.description,
+              config.descriptionFor(l10n.isMl),
               style: theme.textTheme.bodyLarge,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              'Version ${config.version} (build ${config.build})',
+              l10n.versionLine(config.version, config.build),
               style: theme.textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
-            if (config.details.isNotEmpty) ...[
+            if (details.isNotEmpty) ...[
               const SizedBox(height: 24),
               const Divider(),
               const SizedBox(height: 8),
-              for (final entry in config.details.entries)
+              for (final entry in details.entries)
                 _DetailRow(label: entry.key, value: entry.value),
             ],
           ],

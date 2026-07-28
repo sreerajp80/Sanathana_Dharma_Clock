@@ -4,8 +4,13 @@
 /// are **UTC** instants; screens convert with `.toLocal()` for display, the
 /// same convention as `MuhurtaWindow`. No logic beyond a containment check.
 class HoraWindow {
-  /// Display name of the ruling planet, e.g. `Śukra (Venus)`.
+  /// Canonical display name of the ruling planet, e.g. `Śukra (Venus)`.
+  /// Screens showing a translated interface use [lordIndex] instead.
   final String lord;
+
+  /// Language-free key for [lord]: its position (0–6) in `HoraNames.order`, so
+  /// a screen can show the planet's name in the user's language.
+  final int lordIndex;
 
   /// `true` for a day horā (sunrise → sunset), `false` for a night horā
   /// (sunset → next sunrise).
@@ -22,6 +27,7 @@ class HoraWindow {
     required this.isDay,
     required this.start,
     required this.end,
+    this.lordIndex = 0,
   });
 
   /// `true` when [instant] falls inside `[start, end)`.
@@ -36,12 +42,13 @@ class HoraWindow {
       other is HoraWindow &&
           runtimeType == other.runtimeType &&
           lord == other.lord &&
+          lordIndex == other.lordIndex &&
           isDay == other.isDay &&
           start == other.start &&
           end == other.end;
 
   @override
-  int get hashCode => Object.hash(lord, isDay, start, end);
+  int get hashCode => Object.hash(lord, lordIndex, isDay, start, end);
 
   @override
   String toString() =>

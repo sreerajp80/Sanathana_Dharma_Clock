@@ -17,6 +17,7 @@ import '../theme/app_theme.dart';
 import '../widgets/dharma_dial_painter.dart';
 import '../widgets/location_permission_banner.dart';
 import '../widgets/window_colors.dart';
+import '../widgets/window_labels.dart';
 
 /// The main screen: the analog dharma dial and the digital readout, driven by
 /// the once-per-second [clockProvider]. The whole reading also carries a
@@ -43,7 +44,7 @@ class ClockScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: Semantics(
-          label: _semanticLabel(snapshot),
+          label: _semanticLabel(snapshot, l10n),
           container: true,
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -57,12 +58,12 @@ class ClockScreen extends ConsumerWidget {
                       const _LocationHeader(),
                       const LocationPermissionBanner(),
                       const SizedBox(height: 16),
-                      _Dial(snapshot: snapshot),
+                      _Dial(snapshot: snapshot, l10n: l10n),
                       const SizedBox(height: 16),
                       const _ArcLegend(),
                       const _Legend(),
                       const SizedBox(height: 24),
-                      _Readout(snapshot: snapshot),
+                      _Readout(snapshot: snapshot, l10n: l10n),
                     ],
                   ),
                 ),
@@ -74,14 +75,20 @@ class ClockScreen extends ConsumerWidget {
     );
   }
 
-  /// A plain-English one-line reading for screen readers.
-  String _semanticLabel(ClockSnapshot s) {
+  /// A one-line reading for screen readers, in the user's language.
+  String _semanticLabel(ClockSnapshot s, AppLocalizations l10n) {
     final d = s.dharma;
-    return 'Dharma time: Ghatika ${d.ghatika}, Vinadi ${d.vinadi}, '
-        'Prana ${d.prana}. Muhurta ${d.muhurta + 1} of '
-        '${AppConstants.muhurtaPerDay}, ${MuhurtaNames.at(d.muhurta)}. '
-        'Civil time ${_hms(s.civilTime)}. Sunrise ${_hm(d.sunrise)}. '
-        '${_sinceSunrise(s.civilTime, d.sunrise)}.';
+    return l10n.clockSemantics(
+      ghatika: d.ghatika,
+      vinadi: d.vinadi,
+      prana: d.prana,
+      muhurtaNumber: d.muhurta + 1,
+      muhurtaTotal: AppConstants.muhurtaPerDay,
+      muhurtaName: MuhurtaNames.at(d.muhurta, isMalayalam: l10n.isMl),
+      civilTime: _hms(s.civilTime),
+      sunrise: _hm(d.sunrise),
+      sinceSunriseText: _sinceSunrise(s.civilTime, d.sunrise, l10n),
+    );
   }
 }
 
@@ -89,9 +96,10 @@ class ClockScreen extends ConsumerWidget {
 /// day's special windows (Abhijit + kālas) into [DialArc] fractions, so the
 /// painter itself never sees times or the kāla rules.
 class _Dial extends ConsumerWidget {
-  const _Dial({required this.snapshot});
+  const _Dial({required this.snapshot, required this.l10n});
 
   final ClockSnapshot snapshot;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -103,7 +111,14 @@ class _Dial extends ConsumerWidget {
       child: CustomPaint(
         painter: DharmaDialPainter(
           dharma: snapshot.dharma,
-          muhurtaName: MuhurtaNames.at(snapshot.dharma.muhurta),
+          muhurtaName: MuhurtaNames.at(
+            snapshot.dharma.muhurta,
+            isMalayalam: l10n.isMl,
+          ),
+          countLabel: l10n.muhurtaCount(
+            snapshot.dharma.muhurta + 1,
+            AppConstants.muhurtaPerDay,
+          ),
           accent: AppTheme.vermillion,
           foreground: AppTheme.vermillionDark,
           muted: AppTheme.muted,
@@ -148,6 +163,7 @@ class _ArcLegend extends ConsumerWidget {
     if (kalas.isEmpty) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Wrap(
@@ -169,7 +185,7 @@ class _ArcLegend extends ConsumerWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  w.name,
+                  windowName(w, l10n),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppTheme.muted,
                   ),
@@ -193,6 +209,7 @@ class _Legend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Wrap(
       alignment: WrapAlignment.center,
       spacing: 20,
@@ -202,16 +219,19 @@ class _Legend extends StatelessWidget {
           unit: DharmaUnits.ghatika,
           color: AppTheme.vermillionDark,
           thickness: 4,
+          isMl: l10n.isMl,
         ),
         _LegendItem(
           unit: DharmaUnits.vinadi,
           color: AppTheme.vermillion,
           thickness: 3,
+          isMl: l10n.isMl,
         ),
         _LegendItem(
           unit: DharmaUnits.prana,
           color: AppTheme.vermillion,
           thickness: 1.5,
+          isMl: l10n.isMl,
         ),
       ],
     );
@@ -224,11 +244,13 @@ class _LegendItem extends StatelessWidget {
     required this.unit,
     required this.color,
     required this.thickness,
+    required this.isMl,
   });
 
   final DharmaUnit unit;
   final Color color;
   final double thickness;
+  final bool isMl;
 
   @override
   Widget build(BuildContext context) {
@@ -246,7 +268,7 @@ class _LegendItem extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Text(
-          '${unit.name} · ${unit.civil}',
+          '${unit.nameFor(isMl)} · ${unit.civilFor(isMl)}',
           style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.muted),
         ),
       ],
@@ -256,9 +278,10 @@ class _LegendItem extends StatelessWidget {
 
 /// The digital readout under the dial (idea doc §5).
 class _Readout extends StatelessWidget {
-  const _Readout({required this.snapshot});
+  const _Readout({required this.snapshot, required this.l10n});
 
   final ClockSnapshot snapshot;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -268,7 +291,9 @@ class _Readout extends StatelessWidget {
     return Column(
       children: [
         Text(
-          'Ghaṭikā ${d.ghatika} : Vināḍī ${d.vinadi} : Prāṇa ${d.prana}',
+          '${l10n.ghazikaLabel} ${d.ghatika} : '
+          '${l10n.vinadiLabel} ${d.vinadi} : '
+          '${l10n.pranaLabel} ${d.prana}',
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -276,14 +301,14 @@ class _Readout extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Civil ${_hms(snapshot.civilTime)}    '
-          'Sunrise ${_hm(d.sunrise)}',
+          '${l10n.civilShort} ${_hms(snapshot.civilTime)}    '
+          '${l10n.sunriseLabel} ${_hm(d.sunrise)}',
           style: theme.textTheme.bodyLarge?.copyWith(color: AppTheme.muted),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 4),
         Text(
-          _sinceSunrise(snapshot.civilTime, d.sunrise),
+          _sinceSunrise(snapshot.civilTime, d.sunrise, l10n),
           style: theme.textTheme.bodyLarge?.copyWith(color: AppTheme.muted),
           textAlign: TextAlign.center,
         ),
@@ -310,6 +335,7 @@ class _LocationHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final effective = ref.watch(effectiveLocationProvider);
+    final l10n = AppLocalizations.of(context);
 
     final IconData icon;
     final String text;
@@ -318,7 +344,7 @@ class _LocationHeader extends ConsumerWidget {
     if (effective != null) {
       final isLive = effective.source == LocationSource.live;
       icon = isLive ? Icons.my_location : Icons.place_outlined;
-      text = isLive ? 'Live location' : 'Saved location';
+      text = isLive ? l10n.liveLocation : l10n.savedLocation;
       coords = '${_coord(effective.latitude)}, ${_coord(effective.longitude)}';
     } else {
       // No anchor: explain the no-location state using the live-fetch progress.
@@ -327,13 +353,13 @@ class _LocationHeader extends ConsumerWidget {
           location.liveResult != null && !location.liveResult!.isSuccess;
       if (location.isFetching) {
         icon = Icons.my_location;
-        text = 'Getting location…';
+        text = l10n.gettingLocation;
       } else if (location.useLive && failed) {
         icon = Icons.error_outline;
-        text = _liveFailureMessage(location.liveResult!.status);
+        text = _liveFailureMessage(location.liveResult!.status, l10n);
       } else {
         icon = Icons.schedule;
-        text = 'No location — midnight-anchored day';
+        text = l10n.noLocationMidnight;
       }
     }
 
@@ -366,19 +392,19 @@ class _LocationHeader extends ConsumerWidget {
   /// One coordinate at a fixed 4 decimals for the on-screen readout.
   String _coord(double value) => value.toStringAsFixed(4);
 
-  /// A plain-English reason a live fetch failed, ending with the midnight
+  /// A plain-words reason a live fetch failed, ending with the midnight
   /// fallback the clock is using. Never includes coordinates (security.md §9).
-  String _liveFailureMessage(LocationStatus status) {
+  String _liveFailureMessage(LocationStatus status, AppLocalizations l10n) {
     switch (status) {
       case LocationStatus.serviceDisabled:
-        return 'Location is off on the device — using midnight-anchored day';
+        return l10n.locationOffMidnight;
       case LocationStatus.permissionDenied:
-        return 'Location permission denied — using midnight-anchored day';
+        return l10n.locationDeniedMidnight;
       case LocationStatus.permissionDeniedForever:
-        return 'Location permission blocked — using midnight-anchored day';
+        return l10n.locationBlockedMidnight;
       case LocationStatus.error:
       case LocationStatus.success:
-        return 'No location fix yet — using midnight-anchored day';
+        return l10n.noFixMidnight;
     }
   }
 }
@@ -393,12 +419,12 @@ String _hms(DateTime t) {
   return '${_two(l.hour)}:${_two(l.minute)}:${_two(l.second)}';
 }
 
-/// How long after today's sunrise it is now, as `Xh Ym Zs after sunrise`.
-/// Clamped at zero so it never reads negative near the day boundary.
-String _sinceSunrise(DateTime civil, DateTime sunrise) {
+/// How long after today's sunrise it is now, worded by [l10n]. Clamped at zero
+/// so it never reads negative near the day boundary.
+String _sinceSunrise(DateTime civil, DateTime sunrise, AppLocalizations l10n) {
   var d = civil.difference(sunrise);
   if (d.isNegative) d = Duration.zero;
-  return '${d.inHours}h ${d.inMinutes % 60}m ${d.inSeconds % 60}s after sunrise';
+  return l10n.sinceSunrise(d.inHours, d.inMinutes % 60, d.inSeconds % 60);
 }
 
 /// `HH:mm` in local time.

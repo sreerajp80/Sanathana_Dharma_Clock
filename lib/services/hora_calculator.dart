@@ -51,6 +51,7 @@ class HoraCalculator {
       final to = (halfMicros * (i + 1) / horasPerHalf).round();
       return HoraWindow(
         lord: HoraNames.lordAt(weekday, k),
+        lordIndex: HoraNames.indexAt(weekday, k),
         isDay: isDay,
         start: base.add(Duration(microseconds: from)),
         end: base.add(Duration(microseconds: to)),

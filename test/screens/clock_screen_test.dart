@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:sanathana_dharma_clock/core/config/app_localizations.dart';
 import 'package:sanathana_dharma_clock/providers/clock_providers.dart';
 import 'package:sanathana_dharma_clock/providers/core_providers.dart';
 import 'package:sanathana_dharma_clock/providers/location_providers.dart';
@@ -30,10 +32,12 @@ void main() {
     source: LocationSource.saved,
   );
 
-  /// Pumps [ClockScreen] with the clock driven off [fixedNow] and [location].
+  /// Pumps [ClockScreen] with the clock driven off [fixedNow] and [location],
+  /// in [locale].
   Future<void> pumpClock(
     WidgetTester tester, {
     EffectiveLocation? location = kochi,
+    Locale locale = const Locale('en'),
   }) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
@@ -46,7 +50,17 @@ void main() {
           nowProvider.overrideWithValue(() => fixedNow),
           effectiveLocationProvider.overrideWithValue(location),
         ],
-        child: const MaterialApp(home: ClockScreen()),
+        child: MaterialApp(
+          locale: locale,
+          supportedLocales: const [Locale('en'), Locale('ml')],
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          home: const ClockScreen(),
+        ),
       ),
     );
     await tester.pump(const Duration(milliseconds: 100));
@@ -83,5 +97,34 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.textContaining('midnight-anchored day'), findsWidgets);
+  });
+
+  testWidgets('Malayalam readout, legend and location line are translated', (
+    tester,
+  ) async {
+    await pumpClock(tester, locale: const Locale('ml'));
+
+    // The readout uses the Malayalam unit names.
+    expect(find.textContaining('ഘടിക'), findsWidgets);
+    expect(find.textContaining(': വിനാഡി'), findsOneWidget);
+    // The location line at the top.
+    expect(find.text('സംരക്ഷിച്ച സ്ഥലം'), findsOneWidget);
+
+    // No English wording is left behind.
+    expect(find.textContaining(': Vināḍī'), findsNothing);
+    expect(find.text('Saved location'), findsNothing);
+  });
+
+  testWidgets('Malayalam no-location message replaces the English one', (
+    tester,
+  ) async {
+    await pumpClock(tester, location: null, locale: const Locale('ml'));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(
+      find.textContaining('അർദ്ധരാത്രി അടിസ്ഥാനമാക്കിയ ദിവസം'),
+      findsWidgets,
+    );
+    expect(find.textContaining('midnight-anchored day'), findsNothing);
   });
 }

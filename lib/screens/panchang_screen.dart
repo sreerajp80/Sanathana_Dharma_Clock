@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../core/config/app_localizations.dart';
 import '../core/constants/panchang_names.dart';
 import '../models/panchang_day.dart';
-import '../providers/language_provider.dart';
 import '../providers/panchang_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/location_permission_banner.dart';
@@ -19,7 +18,11 @@ class PanchangScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final panchang = ref.watch(panchangDayProvider);
     final l10n = AppLocalizations.of(context);
-    final isMl = ref.watch(appLanguageProvider).isMalayalam;
+
+    // The language comes from the active `Locale` only, like every other
+    // screen. `localeProvider` is already derived from the language setting,
+    // so this is the same answer with one source of truth instead of two.
+    final isMl = l10n.isMl;
 
     return DefaultTabController(
       length: 2,
@@ -136,11 +139,14 @@ class _PanchangView extends StatelessWidget {
                     keralaStyle: keralaStyle,
                     isMalayalam: isMalayalam,
                   )
-                : panchang.tithi.detail,
+                : PanchangNames.paksha(
+                    panchang.tithi.index,
+                    isMalayalam: isMalayalam,
+                  ),
             meaning: isMalayalam
                 ? 'ചന്ദ്രന്റെ ഘട്ടത്തെ പിന്തുടരുന്ന ചന്ദ്ര ദിനം. 30 തിഥികൾ ഒരു ചാന്ദ്ര മാസത്തെ ഉണ്ടാക്കുന്നു.'
                 : 'The lunar day, which follows the Moon’s phase. 30 tithis make one full lunar month.',
-            endText: _endText(panchang.tithi, panchang.sunriseUtc, isMalayalam),
+            endText: _endText(panchang.tithi, panchang.sunriseUtc, l10n),
           ),
           _LimbCard(
             label: l10n.nakshatraLabel,
@@ -148,31 +154,29 @@ class _PanchangView extends StatelessWidget {
             meaning: isMalayalam
                 ? 'ചന്ദ്രൻ കടന്നുപോകുന്ന നക്ഷത്ര സമൂഹം. ആകാശ പാതയെ 27 നക്ഷത്ര ഗണങ്ങളായി തിരിച്ചിരിക്കുന്നു.'
                 : 'The star group the Moon is passing through. The sky path is divided into 27 such star groups.',
-            endText: _endText(
-              panchang.nakshatra,
-              panchang.sunriseUtc,
-              isMalayalam,
-            ),
+            endText: _endText(panchang.nakshatra, panchang.sunriseUtc, l10n),
           ),
           _LimbCard(
             label: l10n.yogaLabel,
-            name: panchang.yoga.name,
+            name: PanchangNames.yogaName(
+              panchang.yoga.index,
+              isMalayalam: isMalayalam,
+            ),
             meaning: isMalayalam
                 ? 'സൂര്യന്റെയും ചന്ദ്രന്റെയും സംയോജിത ചലനത്തിൽ നിന്നുള്ള സമയം. ഒരു ചക്രത്തിൽ 27 യോഗങ്ങളുണ്ട്.'
                 : 'A period from the combined movement of the Sun and Moon. There are 27 yogas in a cycle.',
-            endText: _endText(panchang.yoga, panchang.sunriseUtc, isMalayalam),
+            endText: _endText(panchang.yoga, panchang.sunriseUtc, l10n),
           ),
           _LimbCard(
             label: l10n.karanaLabel,
-            name: panchang.karana.name,
+            name: PanchangNames.karana(
+              panchang.karana.index,
+              isMalayalam: isMalayalam,
+            ),
             meaning: isMalayalam
                 ? 'ഒരു തിഥിയുടെ പകുതി.'
                 : 'Half of a tithi. The karaṇa names repeat through the month.',
-            endText: _endText(
-              panchang.karana,
-              panchang.sunriseUtc,
-              isMalayalam,
-            ),
+            endText: _endText(panchang.karana, panchang.sunriseUtc, l10n),
           ),
         ],
       ),
@@ -215,7 +219,10 @@ class _DayHeaderCard extends StatelessWidget {
         headlineStyle =
             '$yearTitle ${cal.kollavarshamYear} $masa · $njattuvela ${l10n.njattuvelaLabel}';
       } else {
-        final masa = PanchangNames.masa(cal.amantaMasaIndex);
+        final masa = PanchangNames.masa(
+          cal.amantaMasaIndex,
+          isMalayalam: isMalayalam,
+        );
         final yearTitle = isMalayalam ? 'വിക്രം സംവത്' : 'Vikram Samvat';
         headlineStyle = '$yearTitle ${cal.vikramSamvatYear} $masa';
       }
@@ -237,7 +244,7 @@ class _DayHeaderCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              _dayDate(sunriseLocal),
+              _dayDate(sunriseLocal, l10n),
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -291,6 +298,8 @@ class _CalendarCard extends StatelessWidget {
       isAdhika: calendar.isAdhika,
     );
 
+    final isUttarayana = calendar.ayana == PanchangNames.uttarayana;
+
     final pakshaValue = PanchangNames.pakshaFormatted(
       calendar.weekday, // placeholder, paksha formatted handles tithi index
       keralaStyle: keralaStyle,
@@ -342,21 +351,19 @@ class _CalendarCard extends StatelessWidget {
             ),
             _CalendarRow(
               label: l10n.rtuLabel,
-              value: calendar.rtu,
-              note: isMalayalam
-                  ? 'ഋതു (കാലാവസ്ഥാ കാലം). ഓരോ ഋതുവും രണ്ട് ചാന്ദ്ര മാസങ്ങൾ ഉൾക്കൊള്ളുന്നു.'
-                  : 'The season. Each season spans two lunar months.',
+              value: PanchangNames.rtuOfMasa(
+                calendar.amantaMasaIndex,
+                isMalayalam: isMalayalam,
+              ),
+              note: l10n.rtuNote,
             ),
             _CalendarRow(
               label: l10n.ayanaLabel,
-              value: calendar.ayana,
-              note: calendar.ayana == PanchangNames.uttarayana
-                  ? (isMalayalam
-                        ? 'സൂര്യന്റെ ഉത്തരായണ ഗതി (മകര സംക്രാന്തി മുതൽ).'
-                        : 'The Sun’s northward half-year, from Makara Saṅkrānti.')
-                  : (isMalayalam
-                        ? 'സൂര്യന്റെ ദക്ഷിണായന ഗതി (കർക്കടക സംക്രാന്തി മുതൽ).'
-                        : 'The Sun’s southward half-year, from Karka Saṅkrānti.'),
+              value: PanchangNames.ayanaName(
+                isUttarayana: isUttarayana,
+                isMalayalam: isMalayalam,
+              ),
+              note: isUttarayana ? l10n.uttarayanaNote : l10n.dakshinayanaNote,
             ),
           ],
         ),
@@ -435,13 +442,21 @@ class _MoonCard extends StatelessWidget {
                 Expanded(
                   child: _MoonTime(
                     label: l10n.moonrise,
-                    time: _moonTime(panchang.moonriseUtc, panchang.sunriseUtc),
+                    time: _moonTime(
+                      panchang.moonriseUtc,
+                      panchang.sunriseUtc,
+                      l10n,
+                    ),
                   ),
                 ),
                 Expanded(
                   child: _MoonTime(
                     label: l10n.moonset,
-                    time: _moonTime(panchang.moonsetUtc, panchang.sunriseUtc),
+                    time: _moonTime(
+                      panchang.moonsetUtc,
+                      panchang.sunriseUtc,
+                      l10n,
+                    ),
                   ),
                 ),
               ],
@@ -548,28 +563,16 @@ String _hm(DateTime t) {
   return '${_two(l.hour)}:${_two(l.minute)}';
 }
 
-const List<String> _months = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
-
-String _dayDate(DateTime local) {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  return '${days[local.weekday - 1]}, ${local.day} '
-      '${_months[local.month - 1]} ${local.year}';
+String _dayDate(DateTime local, AppLocalizations l10n) {
+  return '${l10n.shortWeekdayName(local.weekday)}, ${local.day} '
+      '${l10n.shortMonthName(local.month)} ${local.year}';
 }
 
-String _moonTime(DateTime? eventUtc, DateTime sunriseUtc) {
+String _moonTime(
+  DateTime? eventUtc,
+  DateTime sunriseUtc,
+  AppLocalizations l10n,
+) {
   if (eventUtc == null) return '—';
   final eventLocal = eventUtc.toLocal();
   final sunriseLocal = sunriseUtc.toLocal();
@@ -580,10 +583,11 @@ String _moonTime(DateTime? eventUtc, DateTime sunriseUtc) {
   return sameDate
       ? _hm(eventUtc)
       : '${_hm(eventUtc)} (${eventLocal.day} '
-            '${_months[eventLocal.month - 1]})';
+            '${l10n.shortMonthName(eventLocal.month)})';
 }
 
-String _endText(PanchangLimb limb, DateTime sunriseUtc, bool isMalayalam) {
+String _endText(PanchangLimb limb, DateTime sunriseUtc, AppLocalizations l10n) {
+  final isMalayalam = l10n.isMl;
   final end = limb.endUtc;
   if (end == null) {
     return isMalayalam
@@ -599,5 +603,6 @@ String _endText(PanchangLimb limb, DateTime sunriseUtc, bool isMalayalam) {
   final untilText = isMalayalam ? 'വരെ' : 'until';
   return sameDate
       ? '$untilText ${_hm(end)}'
-      : '$untilText ${_hm(end)} (${endLocal.day} ${_months[endLocal.month - 1]})';
+      : '$untilText ${_hm(end)} '
+            '(${endLocal.day} ${l10n.shortMonthName(endLocal.month)})';
 }

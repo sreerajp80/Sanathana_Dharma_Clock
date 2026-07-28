@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/config/app_localizations.dart';
 import '../providers/location_providers.dart';
 import '../services/location_service.dart';
 import '../theme/app_theme.dart';
@@ -25,6 +26,7 @@ class LocationPermissionBanner extends ConsumerWidget {
     final location = ref.watch(locationProvider);
     final notifier = ref.read(locationProvider.notifier);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     final status = location.liveResult?.status;
     final isBlocked = status == LocationStatus.permissionDeniedForever;
@@ -57,7 +59,7 @@ class LocationPermissionBanner extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Location permission is required to show the data with respect to current location.',
+                        l10n.locationPermissionNeeded,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: AppTheme.vermillionDark,
@@ -66,8 +68,8 @@ class LocationPermissionBanner extends ConsumerWidget {
                       const SizedBox(height: 6),
                       Text(
                         isBlocked
-                            ? 'Location permission is blocked in system settings. Grant permission in App Settings or set a location manually.'
-                            : 'Without location permission, time calculations use a default midnight anchor instead of your local sunrise.',
+                            ? l10n.locationPermissionBlockedHelp
+                            : l10n.locationPermissionMissingHelp,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: AppTheme.muted,
                         ),
@@ -79,17 +81,17 @@ class LocationPermissionBanner extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             if (location.isFetching)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
-                    SizedBox(width: 8),
-                    Text('Getting location…'),
+                    const SizedBox(width: 8),
+                    Text(l10n.gettingLocation),
                   ],
                 ),
               )
@@ -102,13 +104,13 @@ class LocationPermissionBanner extends ConsumerWidget {
                     FilledButton.icon(
                       onPressed: () => notifier.openAppSettings(),
                       icon: const Icon(Icons.settings, size: 18),
-                      label: const Text('Open App Settings'),
+                      label: Text(l10n.openAppSettings),
                     )
                   else
                     FilledButton.icon(
                       onPressed: () => notifier.requestLocationPermission(),
                       icon: const Icon(Icons.my_location, size: 18),
-                      label: const Text('Grant Permission'),
+                      label: Text(l10n.grantPermission),
                     ),
                   OutlinedButton.icon(
                     onPressed: () => context.push('/settings/location'),
@@ -116,7 +118,7 @@ class LocationPermissionBanner extends ConsumerWidget {
                       Icons.edit_location_alt_outlined,
                       size: 18,
                     ),
-                    label: const Text('Location Settings'),
+                    label: Text(l10n.locationSettings),
                   ),
                 ],
               ),

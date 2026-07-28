@@ -25,11 +25,33 @@ abstract final class PanchangNames {
     'Chaturdaśī',
   ];
 
+  /// The same 15 tithi names in Malayalam script.
+  static const List<String> _tithiBaseMl = <String>[
+    'പ്രതിപദ',
+    'ദ്വിതീയ',
+    'തൃതീയ',
+    'ചതുർത്ഥി',
+    'പഞ്ചമി',
+    'ഷഷ്ഠി',
+    'സപ്തമി',
+    'അഷ്ടമി',
+    'നവമി',
+    'ദശമി',
+    'ഏകാദശി',
+    'ദ്വാദശി',
+    'ത്രയോദശി',
+    'ചതുർദശി',
+  ];
+
   static const String purnima = 'Pūrṇimā';
+  static const String purnimaMl = 'പൂർണ്ണിമ';
   static const String amavasya = 'Amāvāsyā';
+  static const String amavasyaMl = 'അമാവാസ്യ';
 
   static const String shuklaPaksha = 'Śukla Pakṣa';
+  static const String shuklaPakshaMl = 'ശുക്ല പക്ഷം';
   static const String krishnaPaksha = 'Kṛṣṇa Pakṣa';
+  static const String krishnaPakshaMl = 'കൃഷ്ണ പക്ഷം';
 
   // Kerala Tithi Tables
   static const List<String> _keralaTithiBaseEn = <String>[
@@ -76,12 +98,15 @@ abstract final class PanchangNames {
   static const String keralaKrishnaPakshaEn = 'Karutha Paksham (Krishna)';
   static const String keralaKrishnaPakshaMl = 'കറുത്ത പക്ഷം (കൃഷ്ണ പക്ഷം)';
 
-  /// North Indian name of tithi [index].
-  static String tithi(int index) {
+  /// North Indian name of tithi [index], in Latin or Malayalam script.
+  static String tithi(int index, {bool isMalayalam = false}) {
     final i = index % 30;
     final inPaksha = i % 15;
-    if (inPaksha == 14) return i < 15 ? purnima : amavasya;
-    return _tithiBase[inPaksha];
+    if (inPaksha == 14) {
+      if (i < 15) return isMalayalam ? purnimaMl : purnima;
+      return isMalayalam ? amavasyaMl : amavasya;
+    }
+    return isMalayalam ? _tithiBaseMl[inPaksha] : _tithiBase[inPaksha];
   }
 
   /// Kerala name of tithi [index] (English or Malayalam).
@@ -104,18 +129,16 @@ abstract final class PanchangNames {
     required bool keralaStyle,
     required bool isMalayalam,
   }) {
-    final north = tithi(index);
+    final north = tithi(index, isMalayalam: isMalayalam);
     final kerala = keralaTithi(index, isMalayalam: isMalayalam);
-    if (keralaStyle) {
-      return '$kerala ($north)';
-    } else {
-      return isMalayalam ? '$north ($kerala)' : '$north ($kerala)';
-    }
+    return keralaStyle ? '$kerala ($north)' : '$north ($kerala)';
   }
 
-  /// North Indian Paksha name.
-  static String paksha(int index) =>
-      (index % 30) < 15 ? shuklaPaksha : krishnaPaksha;
+  /// North Indian Paksha name, in Latin or Malayalam script.
+  static String paksha(int index, {bool isMalayalam = false}) =>
+      (index % 30) < 15
+      ? (isMalayalam ? shuklaPakshaMl : shuklaPaksha)
+      : (isMalayalam ? krishnaPakshaMl : krishnaPaksha);
 
   /// Kerala Paksha name.
   static String keralaPaksha(int index, {required bool isMalayalam}) =>
@@ -129,7 +152,7 @@ abstract final class PanchangNames {
     required bool keralaStyle,
     required bool isMalayalam,
   }) {
-    final north = paksha(index);
+    final north = paksha(index, isMalayalam: isMalayalam);
     final kerala = keralaPaksha(index, isMalayalam: isMalayalam);
     return keralaStyle ? '$kerala ($north)' : '$north ($kerala)';
   }
@@ -163,6 +186,37 @@ abstract final class PanchangNames {
     'Pūrva Bhādrapadā',
     'Uttara Bhādrapadā',
     'Revatī',
+  ];
+
+  /// The same 27 North Indian nakṣatra names in Malayalam script.
+  static const List<String> nakshatrasMl = <String>[
+    'അശ്വിനി',
+    'ഭരണി',
+    'കൃത്തിക',
+    'രോഹിണി',
+    'മൃഗശിര',
+    'ആർദ്ര',
+    'പുനർവസു',
+    'പുഷ്യ',
+    'ആശ്ലേഷ',
+    'മഘ',
+    'പൂർവ ഫൽഗുനി',
+    'ഉത്തര ഫൽഗുനി',
+    'ഹസ്ത',
+    'ചിത്ര',
+    'സ്വാതി',
+    'വിശാഖ',
+    'അനുരാധ',
+    'ജ്യേഷ്ഠ',
+    'മൂല',
+    'പൂർവാഷാഢ',
+    'ഉത്തരാഷാഢ',
+    'ശ്രവണ',
+    'ധനിഷ്ഠ',
+    'ശതഭിഷ',
+    'പൂർവ ഭാദ്രപദ',
+    'ഉത്തര ഭാദ്രപദ',
+    'രേവതി',
   ];
 
   // Kerala Nakshatra English Transliterations
@@ -234,7 +288,7 @@ abstract final class PanchangNames {
     required bool isMalayalam,
   }) {
     final i = index % 27;
-    final north = nakshatras[i];
+    final north = isMalayalam ? nakshatrasMl[i] : nakshatras[i];
     final kerala = isMalayalam ? keralaNakshatrasMl[i] : keralaNakshatrasEn[i];
     return keralaStyle ? '$kerala ($north)' : '$north ($kerala)';
   }
@@ -270,6 +324,41 @@ abstract final class PanchangNames {
     'Vaidhṛti',
   ];
 
+  /// The same 27 yogas in Malayalam script.
+  static const List<String> yogasMl = <String>[
+    'വിഷ്കംഭം',
+    'പ്രീതി',
+    'ആയുഷ്മാൻ',
+    'സൗഭാഗ്യം',
+    'ശോഭനം',
+    'അതിഗണ്ഡം',
+    'സുകർമ്മം',
+    'ധൃതി',
+    'ശൂലം',
+    'ഗണ്ഡം',
+    'വൃദ്ധി',
+    'ധ്രുവം',
+    'വ്യാഘാതം',
+    'ഹർഷണം',
+    'വജ്രം',
+    'സിദ്ധി',
+    'വ്യതീപാതം',
+    'വരീയാൻ',
+    'പരിഘം',
+    'ശിവം',
+    'സിദ്ധം',
+    'സാധ്യം',
+    'ശുഭം',
+    'ശുക്ലം',
+    'ബ്രഹ്മം',
+    'ഇന്ദ്രം',
+    'വൈധൃതി',
+  ];
+
+  /// Name of yoga [index] (0–26), in Latin or Malayalam script.
+  static String yogaName(int index, {bool isMalayalam = false}) =>
+      isMalayalam ? yogasMl[index % 27] : yogas[index % 27];
+
   /// The 7 movable karaṇas.
   static const List<String> movableKaranas = <String>[
     'Bava',
@@ -281,18 +370,41 @@ abstract final class PanchangNames {
     'Viṣṭi',
   ];
 
+  /// The same 7 movable karaṇas in Malayalam script.
+  static const List<String> movableKaranasMl = <String>[
+    'ബവം',
+    'ബാലവം',
+    'കൗലവം',
+    'തൈതിലം',
+    'ഗരം',
+    'വണിജം',
+    'വിഷ്ടി',
+  ];
+
   static const String kimstughna = 'Kiṁstughna';
+  static const String kimstughnaMl = 'കിംസ്തുഘ്നം';
   static const List<String> endFixedKaranas = <String>[
     'Śakuni',
     'Chatuṣpāda',
     'Nāga',
   ];
 
-  static String karana(int index) {
+  /// The same 3 closing fixed karaṇas in Malayalam script.
+  static const List<String> endFixedKaranasMl = <String>[
+    'ശകുനി',
+    'ചതുഷ്പാദം',
+    'നാഗം',
+  ];
+
+  /// Name of the karaṇa in slot [index] (0–59), in Latin or Malayalam script.
+  static String karana(int index, {bool isMalayalam = false}) {
     final i = index % 60;
-    if (i == 0) return kimstughna;
-    if (i >= 57) return endFixedKaranas[i - 57];
-    return movableKaranas[(i - 1) % 7];
+    if (i == 0) return isMalayalam ? kimstughnaMl : kimstughna;
+    if (i >= 57) {
+      return isMalayalam ? endFixedKaranasMl[i - 57] : endFixedKaranas[i - 57];
+    }
+    final slot = (i - 1) % 7;
+    return isMalayalam ? movableKaranasMl[slot] : movableKaranas[slot];
   }
 
   /// North Indian Weekdays.
@@ -304,6 +416,21 @@ abstract final class PanchangNames {
     DateTime.thursday: 'Guruvāra (Thursday)',
     DateTime.friday: 'Śukravāra (Friday)',
     DateTime.saturday: 'Śanivāra (Saturday)',
+  };
+
+  /// The same North Indian weekday names in Malayalam script.
+  ///
+  /// Kept plain (no bracketed gloss) because the Kerala name shown beside it
+  /// already carries the everyday Malayalam weekday, and a gloss here would
+  /// nest one bracket inside another.
+  static const Map<int, String> varasMl = <int, String>{
+    DateTime.sunday: 'രവിവാരം',
+    DateTime.monday: 'സോമവാരം',
+    DateTime.tuesday: 'മംഗളവാരം',
+    DateTime.wednesday: 'ബുധവാരം',
+    DateTime.thursday: 'ഗുരുവാരം',
+    DateTime.friday: 'ശുക്രവാരം',
+    DateTime.saturday: 'ശനിവാരം',
   };
 
   // Kerala Weekday Names
@@ -327,7 +454,10 @@ abstract final class PanchangNames {
     DateTime.saturday: 'ശനി (ശനിയാഴ്ച)',
   };
 
-  static String vara(int weekday) => varas[weekday] ?? varas[DateTime.sunday]!;
+  static String vara(int weekday, {bool isMalayalam = false}) {
+    final map = isMalayalam ? varasMl : varas;
+    return map[weekday] ?? map[DateTime.sunday]!;
+  }
 
   static String keralaVara(int weekday, {required bool isMalayalam}) {
     final map = isMalayalam ? keralaVarasMl : keralaVarasEn;
@@ -339,7 +469,7 @@ abstract final class PanchangNames {
     required bool keralaStyle,
     required bool isMalayalam,
   }) {
-    final north = vara(weekday);
+    final north = vara(weekday, isMalayalam: isMalayalam);
     final kerala = keralaVara(weekday, isMalayalam: isMalayalam);
     return keralaStyle ? '$kerala ($north)' : '$north ($kerala)';
   }
@@ -360,9 +490,27 @@ abstract final class PanchangNames {
     'Phālguna',
   ];
 
-  static const String adhika = 'Adhika';
+  /// The same 12 lunar month names in Malayalam script.
+  static const List<String> masasMl = <String>[
+    'ചൈത്രം',
+    'വൈശാഖം',
+    'ജ്യേഷ്ഠം',
+    'ആഷാഢം',
+    'ശ്രാവണം',
+    'ഭാദ്രപദം',
+    'ആശ്വിനം',
+    'കാർത്തികം',
+    'മാർഗശീർഷം',
+    'പൗഷം',
+    'മാഘം',
+    'ഫാൽഗുനം',
+  ];
 
-  static String masa(int index) => masas[index % 12];
+  static const String adhika = 'Adhika';
+  static const String adhikaMl = 'അധിക';
+
+  static String masa(int index, {bool isMalayalam = false}) =>
+      isMalayalam ? masasMl[index % 12] : masas[index % 12];
 
   // Kerala Solar Month (Kollavarsham) Names
   static const List<String> keralaSolarMasasEn = <String>[
@@ -408,7 +556,10 @@ abstract final class PanchangNames {
     required bool isMalayalam,
     bool isAdhika = false,
   }) {
-    final northMasa = (isAdhika ? '$adhika ' : '') + masa(masaIndex);
+    final adhikaPrefix = isMalayalam ? adhikaMl : adhika;
+    final northMasa =
+        (isAdhika ? '$adhikaPrefix ' : '') +
+        masa(masaIndex, isMalayalam: isMalayalam);
     final keralaMasa = keralaSolarMasa(
       solarMasaIndex,
       isMalayalam: isMalayalam,
@@ -427,8 +578,32 @@ abstract final class PanchangNames {
     'Śiśira (late winter)',
   ];
 
-  static String rtuOfMasa(int masaIndex) => rtus[(masaIndex % 12) ~/ 2];
+  /// The same 6 seasons in Malayalam script, each with a Malayalam gloss.
+  static const List<String> rtusMl = <String>[
+    'വസന്തം (വസന്തകാലം)',
+    'ഗ്രീഷ്മം (വേനൽക്കാലം)',
+    'വർഷം (മഴക്കാലം)',
+    'ശരത്ത് (ശരത്കാലം)',
+    'ഹേമന്തം (ഹേമന്തകാലം)',
+    'ശിശിരം (ശിശിരകാലം)',
+  ];
+
+  static String rtuOfMasa(int masaIndex, {bool isMalayalam = false}) {
+    final i = (masaIndex % 12) ~/ 2;
+    return isMalayalam ? rtusMl[i] : rtus[i];
+  }
 
   static const String uttarayana = 'Uttarāyaṇa';
+  static const String uttarayanaMl = 'ഉത്തരായനം';
   static const String dakshinayana = 'Dakṣiṇāyana';
+  static const String dakshinayanaMl = 'ദക്ഷിണായനം';
+
+  /// The ayana name in Latin or Malayalam script.
+  static String ayanaName({
+    required bool isUttarayana,
+    bool isMalayalam = false,
+  }) {
+    if (isUttarayana) return isMalayalam ? uttarayanaMl : uttarayana;
+    return isMalayalam ? dakshinayanaMl : dakshinayana;
+  }
 }

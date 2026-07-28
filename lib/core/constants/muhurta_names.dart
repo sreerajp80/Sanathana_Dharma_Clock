@@ -46,11 +46,49 @@ abstract final class MuhurtaNames {
     'Samudram',
   ];
 
-  /// The Muhūrta name for [index], clamped to the valid range so a bad index can
-  /// never crash the readout (CLAUDE.md hard rule 4).
-  static String at(int index) {
-    if (names.isEmpty) return '';
-    final i = index.clamp(0, names.length - 1);
-    return names[i];
+  /// The same 30 names written in Malayalam script, in the same order as
+  /// [names]. Kept side by side with the English list, the same way
+  /// `PanchangNames` keeps its two lists.
+  static const List<String> namesMl = <String>[
+    'രുദ്രൻ',
+    'ആഹി',
+    'മിത്രൻ',
+    'പിതൃ',
+    'വസു',
+    'വാരാഹം',
+    'വിശ്വേദേവ',
+    'വിധി',
+    'സുതമുഖി',
+    'പുരുഹൂതൻ',
+    'വാഹിനി',
+    'നക്തനകര',
+    'വരുണൻ',
+    'അര്യമാവ്',
+    'ഭഗൻ',
+    'ഗിരീശൻ',
+    'അജപാദൻ',
+    'അഹിർബുധ്ന്യൻ',
+    'പുഷ്യം',
+    'അശ്വിനി',
+    'യമൻ',
+    'അഗ്നി',
+    'വിധാതാവ്',
+    'കണ്ഡം',
+    'അദിതി',
+    'ജീവൻ/അമൃതം',
+    'വിഷ്ണു',
+    'ദ്യുമദ്ഗദ്യുതി',
+    'ബ്രഹ്മം',
+    'സമുദ്രം',
+  ];
+
+  /// The Muhūrta name for [index] in the asked-for language, clamped to the
+  /// valid range so a bad index can never crash the readout (CLAUDE.md hard
+  /// rule 4).
+  static String at(int index, {bool isMalayalam = false}) {
+    final list = isMalayalam ? namesMl : names;
+    if (list.isEmpty) return '';
+    final i = index.clamp(0, list.length - 1);
+    return list[i];
   }
 }

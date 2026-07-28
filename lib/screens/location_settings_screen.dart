@@ -24,35 +24,33 @@ class LocationSettingsScreen extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           children: [
             SwitchListTile(
-              title: const Text('Use live location'),
-              subtitle: const Text(
-                'Follow GPS. When off, the saved location is used.',
-              ),
+              title: Text(l10n.useLiveLocation),
+              subtitle: Text(l10n.useLiveLocationHelp),
               value: location.useLive,
               onChanged: location.isFetching
                   ? null
                   : (value) => notifier.setUseLive(value),
             ),
             if (location.isFetching)
-              const ListTile(
-                leading: SizedBox(
+              ListTile(
+                leading: const SizedBox(
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                title: Text('Getting current location…'),
+                title: Text(l10n.gettingCurrentLocation),
               )
             else if (location.liveResult != null &&
                 !location.liveResult!.isSuccess)
               ListTile(
                 leading: const Icon(Icons.error_outline),
-                title: Text(_statusMessage(location.liveResult!.status)),
+                title: Text(_statusMessage(location.liveResult!.status, l10n)),
                 trailing:
                     location.liveResult!.status ==
                         LocationStatus.permissionDeniedForever
                     ? TextButton(
                         onPressed: () => notifier.openAppSettings(),
-                        child: const Text('Open Settings'),
+                        child: Text(l10n.openSettings),
                       )
                     : null,
               ),
@@ -72,14 +70,14 @@ class LocationSettingsScreen extends ConsumerWidget {
                           ? null
                           : () => _saveCurrent(context, ref),
                       icon: const Icon(Icons.my_location),
-                      label: const Text('Save current location'),
+                      label: Text(l10n.saveCurrentLocation),
                     ),
                   ),
                   if (location.saved != null) ...[
                     const SizedBox(width: 8),
                     OutlinedButton(
                       onPressed: () => notifier.clear(),
-                      child: const Text('Clear'),
+                      child: Text(l10n.clear),
                     ),
                   ],
                 ],
@@ -98,6 +96,7 @@ class LocationSettingsScreen extends ConsumerWidget {
   Future<void> _saveCurrent(BuildContext context, WidgetRef ref) async {
     final notifier = ref.read(locationProvider.notifier);
     final currentLocationState = ref.read(locationProvider);
+    final l10n = AppLocalizations.of(context);
     final result = await notifier.refreshLive();
 
     if (!context.mounted) return;
@@ -105,7 +104,9 @@ class LocationSettingsScreen extends ConsumerWidget {
     if (!result.isSuccess) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(_statusMessage(result.status))));
+        ..showSnackBar(
+          SnackBar(content: Text(_statusMessage(result.status, l10n))),
+        );
       return;
     }
 
@@ -125,8 +126,8 @@ class LocationSettingsScreen extends ConsumerWidget {
 
     if (!context.mounted) return;
     final message = name.trim().isEmpty
-        ? 'Saved your current location.'
-        : 'Saved location "${name.trim()}".';
+        ? l10n.savedCurrentLocation
+        : l10n.savedNamedLocation(name.trim());
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
@@ -138,6 +139,7 @@ class LocationSettingsScreen extends ConsumerWidget {
     WidgetRef ref,
     SavedLocation currentSaved,
   ) async {
+    final l10n = AppLocalizations.of(context);
     final name = await _showNameDialog(
       context,
       initialValue: currentSaved.label,
@@ -157,8 +159,8 @@ class LocationSettingsScreen extends ConsumerWidget {
 
     if (!context.mounted) return;
     final message = updatedLabel.isEmpty
-        ? 'Updated location.'
-        : 'Updated location name to "$updatedLabel".';
+        ? l10n.updatedLocation
+        : l10n.updatedLocationName(updatedLabel);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
@@ -173,28 +175,31 @@ class LocationSettingsScreen extends ConsumerWidget {
     return showDialog<String>(
       context: context,
       builder: (context) {
+        final l10n = AppLocalizations.of(context);
         return AlertDialog(
           title: Text(
-            initialValue.isEmpty ? 'Name this location' : 'Edit location name',
+            initialValue.isEmpty
+                ? l10n.nameThisLocation
+                : l10n.editLocationName,
           ),
           content: TextField(
             controller: controller,
             autofocus: true,
             textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(
-              hintText: 'e.g. Home, Office, Varanasi',
-              labelText: 'Location Name',
+            decoration: InputDecoration(
+              hintText: l10n.locationNameHint,
+              labelText: l10n.locationNameLabel,
             ),
             onSubmitted: (value) => Navigator.of(context).pop(value),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(null),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(controller.text),
-              child: const Text('Save'),
+              child: Text(l10n.save),
             ),
           ],
         );
@@ -202,19 +207,20 @@ class LocationSettingsScreen extends ConsumerWidget {
     );
   }
 
-  /// A plain-English reason for a failed live fetch. Never includes coordinates.
-  String _statusMessage(LocationStatus status) {
+  /// A plain-language reason for a failed live fetch, in the active language.
+  /// Never includes coordinates.
+  String _statusMessage(LocationStatus status, AppLocalizations l10n) {
     switch (status) {
       case LocationStatus.success:
-        return 'Got your location.';
+        return l10n.statusGotLocation;
       case LocationStatus.serviceDisabled:
-        return 'Location is turned off on the device.';
+        return l10n.statusServiceDisabled;
       case LocationStatus.permissionDenied:
-        return 'Location permission was denied.';
+        return l10n.statusPermissionDenied;
       case LocationStatus.permissionDeniedForever:
-        return 'Location permission is blocked. Allow it in app settings.';
+        return l10n.statusPermissionBlocked;
       case LocationStatus.error:
-        return 'Could not get the location. Please try again.';
+        return l10n.statusError;
     }
   }
 }
@@ -231,15 +237,17 @@ class _SavedLocationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (saved == null) {
-      return const ListTile(
-        leading: Icon(Icons.location_off_outlined),
-        title: Text('No saved location'),
-        subtitle: Text('Save one below, or use live location.'),
+      return ListTile(
+        leading: const Icon(Icons.location_off_outlined),
+        title: Text(l10n.noSavedLocation),
+        subtitle: Text(l10n.noSavedLocationHelp),
       );
     }
 
-    final label = saved!.label.isEmpty ? 'Unnamed place' : saved!.label;
+    final label = saved!.label.isEmpty ? l10n.unnamedPlace : saved!.label;
     final coords =
         '${saved!.latitude.toStringAsFixed(4)}, '
         '${saved!.longitude.toStringAsFixed(4)}';
@@ -250,7 +258,7 @@ class _SavedLocationTile extends StatelessWidget {
       subtitle: Text(coords),
       trailing: IconButton(
         icon: const Icon(Icons.edit_outlined),
-        tooltip: 'Edit location name',
+        tooltip: l10n.editLocationName,
         onPressed: onEditName,
       ),
     );

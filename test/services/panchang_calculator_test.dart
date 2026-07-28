@@ -233,7 +233,8 @@ void main() {
           keralaStyle: true,
           isMalayalam: true,
         ),
-        'അശ്വതി (Aśvinī)',
+        // In Malayalam both halves are Malayalam — no mixed script.
+        'അശ്വതി (അശ്വിനി)',
       );
       expect(
         PanchangNames.nakshatraFormatted(
@@ -249,18 +250,18 @@ void main() {
           keralaStyle: false,
           isMalayalam: true,
         ),
-        'Aśvinī (അശ്വതി)',
+        'അശ്വിനി (അശ്വതി)',
       );
     });
 
     test('Kerala Tithi names and cross-reference bracket formatting', () {
       expect(
         PanchangNames.tithiFormatted(0, keralaStyle: true, isMalayalam: true),
-        'പ്രതിപദം (Pratipadā)',
+        'പ്രതിപദം (പ്രതിപദ)',
       );
       expect(
         PanchangNames.tithiFormatted(14, keralaStyle: true, isMalayalam: true),
-        'പൗർണ്ണമി (വെളുത്ത വാവ്) (Pūrṇimā)',
+        'പൗർണ്ണമി (വെളുത്ത വാവ്) (പൂർണ്ണിമ)',
       );
     });
 

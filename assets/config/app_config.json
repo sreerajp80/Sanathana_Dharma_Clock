@@ -1,13 +1,21 @@
 {
   "appName": "Sanathana Dharma Clock",
   "description": "Keeps time in the Sanatana Dharma (Vedic) system, anchored to local sunrise, shown next to civil time.",
-  "version": "2.8.5",
-  "build": "19",
+  "descriptionMl": "സൂര്യോദയം അടിസ്ഥാനമാക്കി സനാതന ധർമ്മ (വൈദിക) സമ്പ്രദായത്തിൽ സമയം കാണിക്കുന്നു, സാധാരണ സമയത്തിനൊപ്പം.",
+  "version": "2.8.6",
+  "build": "20",
   "details": {
     "Author": "Sreeraj P",
     "Email": "sreerajp@zohomail.in",
     "License": "All libraries used are open source.",
     "AI used": "Claude Code",
     "IDE used": "VS Code"
+  },
+  "detailsMl": {
+    "രചയിതാവ്": "Sreeraj P",
+    "ഇമെയിൽ": "sreerajp@zohomail.in",
+    "ലൈസൻസ്": "ഉപയോഗിച്ച എല്ലാ ലൈബ്രറികളും ഓപ്പൺ സോഴ്സ് ആണ്.",
+    "ഉപയോഗിച്ച AI": "Claude Code",
+    "ഉപയോഗിച്ച IDE": "VS Code"
   }
 }

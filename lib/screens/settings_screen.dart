@@ -48,9 +48,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 title: Text(label),
                 onTap: () {
-                  ref
-                      .read(languageModeProvider.notifier)
-                      .setLanguageMode(mode);
+                  ref.read(languageModeProvider.notifier).setLanguageMode(mode);
                   Navigator.of(ctx).pop();
                 },
               );
@@ -59,7 +57,7 @@ class SettingsScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('OK'),
+              child: Text(l10n.ok),
             ),
           ],
         );
@@ -100,26 +98,26 @@ class SettingsScreen extends ConsumerWidget {
             NavCard(
               icon: Icons.place_outlined,
               title: l10n.locationTitle,
-              subtitle: 'Live or saved location for sunrise.',
+              subtitle: l10n.locationCardSubtitle,
               onTap: () => context.push('/settings/location'),
             ),
             NavCard(
               icon: Icons.shield_outlined,
               title: l10n.permissionsTitle,
-              subtitle: 'Permissions used by this app.',
+              subtitle: l10n.permissionsCardSubtitle,
               onTap: () => context.push('/settings/permissions'),
             ),
             NavCard(
               icon: Icons.help_outline,
               title: l10n.helpTitle,
-              subtitle: 'What the dharma time units mean.',
+              subtitle: l10n.helpCardSubtitle,
               onTap: () => context.push('/settings/help'),
             ),
             NavCard(
               icon: Icons.info_outline,
               iconColor: AppTheme.vermillion,
               title: l10n.aboutTitle,
-              subtitle: 'About this app.',
+              subtitle: l10n.aboutCardSubtitle,
               onTap: () => context.push('/about'),
             ),
           ],

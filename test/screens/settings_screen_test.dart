@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:sanathana_dharma_clock/core/config/app_localizations.dart';
 import 'package:sanathana_dharma_clock/providers/core_providers.dart';
 import 'package:sanathana_dharma_clock/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,7 +11,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   /// Pumps [SettingsScreen] on a tall surface so every card in the lazy
   /// [ListView] is built.
-  Future<void> pumpSettings(WidgetTester tester) async {
+  Future<void> pumpSettings(
+    WidgetTester tester, {
+    Locale locale = const Locale('en'),
+  }) async {
     tester.view.physicalSize = const Size(1000, 3000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -19,17 +24,26 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-        ],
-        child: const MaterialApp(home: SettingsScreen()),
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: MaterialApp(
+          locale: locale,
+          supportedLocales: const [Locale('en'), Locale('ml')],
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          home: const SettingsScreen(),
+        ),
       ),
     );
     await tester.pump();
   }
 
-  testWidgets('renders the five navigation cards including Language',
-      (tester) async {
+  testWidgets('renders the five navigation cards including Language', (
+    tester,
+  ) async {
     await pumpSettings(tester);
 
     expect(find.text('Language'), findsOneWidget);
@@ -43,5 +57,24 @@ void main() {
     await pumpSettings(tester);
 
     expect(find.byIcon(Icons.chevron_right), findsNWidgets(5));
+  });
+
+  testWidgets('Malayalam shows Malayalam titles and subtitles', (tester) async {
+    await pumpSettings(tester, locale: const Locale('ml'));
+    final ml = AppLocalizations(const Locale('ml'));
+
+    expect(find.text(ml.locationTitle), findsOneWidget);
+    expect(find.text(ml.permissionsTitle), findsOneWidget);
+    expect(find.text(ml.helpTitle), findsOneWidget);
+    expect(find.text(ml.aboutTitle), findsOneWidget);
+
+    expect(find.text(ml.locationCardSubtitle), findsOneWidget);
+    expect(find.text(ml.permissionsCardSubtitle), findsOneWidget);
+    expect(find.text(ml.helpCardSubtitle), findsOneWidget);
+    expect(find.text(ml.aboutCardSubtitle), findsOneWidget);
+
+    // The English wording must be gone.
+    expect(find.text('Live or saved location for sunrise.'), findsNothing);
+    expect(find.text('About this app.'), findsNothing);
   });
 }
